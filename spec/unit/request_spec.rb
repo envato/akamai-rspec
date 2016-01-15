@@ -61,16 +61,33 @@ describe RestClient::Request do
       expect(RestClient::Request.https_url(path)).to eq("https://#{prod_domain}/")
     end
   end
+end
 
-  it 'queries the staging host' do
-    RestClient::Request.akamai_network('staging')
-    expect(Net::HTTP).to receive(:new).with(stg_domain, anything)
-    RestClient::Request.responsify 'example.com'
+describe AkamaiRSpec::Request do
+  let(:stg_domain) { 'www.example.com.edgesuite-staging.net' }
+  let(:prod_domain) { 'www.example.com.edgesuite.net' }
+  let(:network) { 'prod' }
+  before do
+    AkamaiRSpec::Request.stg_domain = stg_domain
+    AkamaiRSpec::Request.prod_domain = prod_domain
   end
 
-  it 'queries the staging host' do
-    RestClient::Request.akamai_network('production')
-    expect(Net::HTTP).to receive(:new).with(prod_domain, anything)
-    RestClient::Request.responsify 'example.com'
+  subject { described_class.new(network).get('http://examples.com') }
+
+  describe '#get' do
+    context 'prod domain' do
+      it 'queries the right domain' do
+        expect(Net::HTTP).to receive(:start).with(prod_domain, anything)
+        subject
+      end
+    end
+
+    context 'stating domain' do
+      let(:network) { 'staging' }
+      it 'quereis the right domain' do
+        expect(Net::HTTP).to receive(:start).with(stg_domain, anything)
+        subject
+      end
+    end
   end
 end
