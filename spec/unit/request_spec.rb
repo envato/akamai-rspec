@@ -10,8 +10,8 @@ describe AkamaiRSpec::Request do
     AkamaiRSpec::Request.stg_domain = stg_domain
     AkamaiRSpec::Request.prod_domain = prod_domain
     AkamaiRSpec::Request.network = network
-    stub_status(prod_domain, 200)
-    stub_status(stg_domain, 200)
+    stub_status(prod_domain, '', 200)
+    stub_status(stg_domain, '', 200)
   end
 
   subject { described_class.get(url) }

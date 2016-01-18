@@ -2,13 +2,13 @@ require 'rspec'
 require 'webmock/rspec'
 require 'akamai_rspec'
 
-def stub_headers(url, headers, body = 'abc')
-  stub_request(:any, url).to_return(
+def stub_headers(domain, url, headers, body = 'abc')
+  stub_request(:any, "#{domain}/#{url}").to_return(
     body: body, headers: headers)
 end
 
-def stub_status(url, status)
-  stub_request(:any, url).to_return(
+def stub_status(domain, url, status)
+  stub_request(:any, "#{domain}/#{url}").to_return(
     body: 'abc', status: [status, 'message'])
 end
 
