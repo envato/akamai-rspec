@@ -18,7 +18,7 @@ end
 
 RSpec::Matchers.define :have_matching_x_cache_headers do |contents, match_fn|
   match do |url|
-    response = RestClient::Request.responsify url
+    response = AkamaiRSpec::Request.get url
     has_x_cache_headers(response)
     return true if x_cache_headers_match(response, contents, match_fn)
     missing_x_cache_error(response, contents)
