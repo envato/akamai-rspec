@@ -82,21 +82,24 @@ describe 'be_verifiably_secure' do
 end
 
 describe 'be_forbidden' do
+  let(:prod_domain) { 'www.example.com.edgesuite.net' }
+
   before(:each) do
-    stub_status('/success', 200)
-    stub_status('/notfound', 404)
-    stub_status('/forbidden', 403)
+    AkamaiRSpec::Request.prod_domain = prod_domain
+    stub_status(prod_domain, 'success', 200)
+    stub_status(prod_domain, 'notfound', 404)
+    stub_status(prod_domain, 'forbidden', 403)
   end
 
   it 'should pass when it gets a 403' do
-    expect(DOMAIN + '/forbidden').to be_forbidden
+    expect('example.com/forbidden').to be_forbidden
   end
 
   it 'should fail when it gets 404' do
-    expect { expect(DOMAIN + '/notfound').to be_forbidden }.to raise_error(RuntimeError)
+    expect { expect('example.com/notfound').to be_forbidden }.to raise_error(RuntimeError)
   end
 
   it 'should fail when it gets 200' do
-    expect { expect(DOMAIN + '/success').to be_forbidden }.to raise_error(RuntimeError)
+    expect { expect('example.com/success').to be_forbidden }.to raise_error(RuntimeError)
   end
 end
