@@ -12,7 +12,7 @@ def stub_status(domain, url, status)
     body: 'abc', status: [status, 'message'])
 end
 
-def stub_redirect(status, location = '/redirected')
-  stub_request(:any, DOMAIN + '/redirect').to_return(
-    body: 'abc', headers: { 'Location' => DOMAIN + location }, status: [status, 'message'])
+def stub_redirect(domain, status, location = '/redirected')
+  stub_request(:any, "#{domain}/redirect").to_return(
+    body: 'abc', headers: { 'Location' => location }, status: [status, 'message'])
 end
