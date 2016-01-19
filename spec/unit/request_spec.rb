@@ -32,4 +32,15 @@ describe AkamaiRSpec::Request do
       end
     end
   end
+
+  describe '#responsify' do
+    let(:url) { 'nonexistantdomain' }
+    before do
+      stub_request(:any, url).to_return(
+        body: 'abc', status: [500, 'message'])
+    end
+    it 'should not raise an exception when a RestClient exception is raised' do
+      expect { RestClient::Request.responsify(url) }.to_not raise_error
+    end
+  end
 end
