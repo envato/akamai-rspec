@@ -5,12 +5,10 @@ describe 'caching matchers' do
   let(:url) { 'example.com' }
   let(:cacheable_url) { "#{url}/cacheable" }
   let(:not_cacheable_url) { "#{url}/not_cacheable" }
-  let(:real_cacheable_url) { "#{domain}/cacheable"}
-  let(:real_not_cacheable_url) { "#{domain}/not_cacheable"}
   before(:each) do
     AkamaiRSpec::Request.prod_domain = domain
     stub_headers(domain, "cacheable", 'X-Check-Cacheable' => 'YES')
-    stub_headers(domain, "not_cacheable", 'X-Check-Cacheable' => 'NO')
+    stub_headers(domain, "not_cacheable", {'X-Check-Cacheable' => 'NO', 'Cache-Control' => 'no-cache'})
   end
   describe 'be_cacheable' do
 
@@ -25,16 +23,17 @@ describe 'caching matchers' do
 
   describe 'have_no_cache_set' do
     it 'should succeed when not cacheable' do
-      expect(cacheable_url).to have_no_cache_set
+      expect(not_cacheable_url).to have_no_cache_set
     end
 
     it 'should fail when cacheable' do
-      expect { expect(not_cacheable_url).to have_no_cache_set }.to raise_error(RuntimeError)
+      expect { expect(cacheable_url).to have_no_cache_set }.to raise_error(RuntimeError)
     end
   end
 
   describe 'not_be_cached' do
     let(:cacheable_but_miss) { "#{url}/cacheable_but_miss" }
+    let(:not_cacheable_url) { "#{url}/not_cacheable_url" }
     let(:cacheable_and_cached) { "#{url}/cacheable_and_cached" }
     let(:not_cacheable_but_cached) { "#{url}/not_cacheable_but_cached" }
     before(:each) do
@@ -64,21 +63,21 @@ describe 'caching matchers' do
   end
 
   describe 'be_tier_distributed' do
+    let(:random) { '1234567890abcdef' }
+    let(:cacheable_uri) { "#{url}/cacheable?#{random}" }
+    let(:not_cacheable_uri) { "#{url}/not_cacheable?#{random}" }
     before(:each) do
-      cacheable_uri = Addressable::Template.new url + '/cacheable?{random}'
-      stub_request(:any, cacheable_uri).to_return(
-        body: 'abc', headers: { 'X_Cache_Remote' => 'TCP_MISS' })
-      not_cacheable_uri = Addressable::Template.new url + '/not_cacheable?{random}'
-      stub_request(:any, not_cacheable_uri).to_return(
-        body: 'abc', headers: { 'Cache-control' => 'no-cache' })
+      expect(SecureRandom).to receive(:hex).and_return(random)
+      stub_headers(domain, "cacheable?#{random}", { 'X_Cache_Remote' => 'TCP_MISS' })
+      stub_headers(domain, "not_cacheable?#{random}", { 'Cache-control' => 'no-cache' })
     end
 
-    it 'should succeed when it is remote cached' do
-      expect(cacheable_url).to be_tier_distributed
+    it 'should cacheable_uri when it is remote cached' do
+      expect(cacheable_uri).to be_tier_distributed
     end
 
     it 'should fail when not remotely cached' do
-      expect { expect(not_cacheable_url).to be_tier_distributed }.to raise_error(RuntimeError)
+      expect { expect(not_cacheable_uri).to be_tier_distributed }.to raise_error(RuntimeError)
     end
   end
 end
