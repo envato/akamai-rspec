@@ -4,7 +4,7 @@ require 'akamai_rspec'
 
 def stub_headers(domain, url, headers, body = 'abc')
   stub_request(:any, "#{domain}/#{url}").to_return(
-    body: body, headers: headers)
+    body: body, headers: headers, status: [200, 'message'])
 end
 
 def stub_status(domain, url, status)
