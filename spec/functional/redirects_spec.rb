@@ -2,109 +2,112 @@ require 'spec_helper'
 require 'rspec/expectations'
 
 describe 'be_permanently_redirected_to' do
+  let(:url) { 'example.com/redirect' }
   before(:each) do
-    stub_redirect(301)
+    stub_redirect('example.com', 301)
   end
 
   it 'should be successful on 301 to new' do
-    expect(DOMAIN + '/redirect').to be_permanently_redirected_to(DOMAIN + '/redirected')
+    expect(url).to be_permanently_redirected_to('/redirected')
   end
 
   it 'should fail on 301 to wrong location' do
-    expect { expect(DOMAIN + '/redirect').to be_permanently_redirected_to(DOMAIN + '/wrong') }
+    expect { expect(url).to be_permanently_redirected_to('/wrong') }
       .to raise_error(RuntimeError)
   end
 
   it 'should fail on 300 to correct location' do
-    stub_redirect(300)
-    expect { expect(DOMAIN + '/redirect').to be_permanently_redirected_to(DOMAIN + '/redirected') }
+    stub_redirect('example.com', 300)
+    expect { expect(url).to be_permanently_redirected_to('/redirected') }
       .to raise_error(RuntimeError)
   end
 
   it 'should fail on 300 to wrong location' do
-    stub_redirect(300)
-    expect { expect(DOMAIN + '/redirect').to be_permanently_redirected_to(DOMAIN + '/wrong') }
+    stub_redirect('example.com', 300)
+    expect { expect(url).to be_permanently_redirected_to('/wrong') }
       .to raise_error(RuntimeError)
   end
 
   it 'should fail on 200' do
-    stub_request(:any, DOMAIN + '/redirect').to_return(body: 'abc')
-    expect { expect(DOMAIN + '/redirect').to be_permanently_redirected_to(DOMAIN + '/redirected') }
+    stub_request(:any, url).to_return(body: 'abc')
+    expect { expect(url).to be_permanently_redirected_to('/redirected') }
       .to raise_error(RuntimeError)
   end
 end
 
 describe 'be_temporarily_redirected_to' do
+  let(:url) { 'example.com/redirect' }
   before(:each) do
-    stub_redirect(302)
+    stub_redirect('example.com', 302)
   end
 
   it 'should be successful on 302 to new' do
-    expect(DOMAIN + '/redirect').to be_temporarily_redirected_to(DOMAIN + '/redirected')
+    expect(url).to be_temporarily_redirected_to('/redirected')
   end
 
   it 'should fail on 302 to wrong location' do
-    expect { expect(DOMAIN + '/redirect').to be_temporarily_redirected_to(DOMAIN + '/wrong') }
+    expect { expect(url).to be_temporarily_redirected_to('/wrong') }
       .to raise_error(RuntimeError)
   end
 
   it 'should fail on 300 to correct location' do
-    stub_redirect(300)
-    expect { expect(DOMAIN + '/redirect').to be_temporarily_redirected_to(DOMAIN + '/redirected') }
+    stub_redirect('example.com', 300)
+    expect { expect(url).to be_temporarily_redirected_to('/redirected') }
       .to raise_error(RuntimeError)
   end
 
   it 'should fail on 300 to wrong location' do
-    stub_redirect(300)
-    expect { expect(DOMAIN + '/redirect').to be_temporarily_redirected_to(DOMAIN + '/wrong') }
+    stub_redirect('example.com', 300)
+    expect { expect(url).to be_temporarily_redirected_to('/wrong') }
       .to raise_error(RuntimeError)
   end
 
   it 'should fail on 200' do
-    stub_request(:any, DOMAIN + '/redirect').to_return(body: 'abc')
-    expect { expect(DOMAIN + '/redirect').to be_temporarily_redirected_to(DOMAIN + '/redirected') }
+    stub_request(:any, url).to_return(body: 'abc')
+    expect { expect(url).to be_temporarily_redirected_to('/redirected') }
       .to raise_error(RuntimeError)
   end
 end
 
 describe 'be_temporarily_redirected_with_trailing_slash' do
+  let(:url) { 'example.com/redirect' }
   before(:each) do
-    stub_redirect(302, '/redirect/')
-    stub_request(:any, DOMAIN + '/wrong').to_return(body: 'abc',
-                                                    headers: { 'Location' => DOMAIN + '/blerg/' },
+    stub_redirect('example.com', 302, 'example.com/redirect/')
+    stub_request(:any, 'example.com/wrong').to_return(body: 'abc',
+                                                    headers: { 'Location' => 'example.com/blerg/' },
                                                     status: [302, 'message'])
   end
 
   it 'should be successful on 302 to new' do
-    expect(DOMAIN + '/redirect').to be_temporarily_redirected_with_trailing_slash
+    expect(url).to be_temporarily_redirected_with_trailing_slash
   end
 
   it 'should fail on 302 to wrong location' do
-    expect { expect(DOMAIN + '/wrong').to be_temporarily_redirected_with_trailing_slash }
+    expect { expect('example.com/wrong').to be_temporarily_redirected_with_trailing_slash }
       .to raise_error(RuntimeError)
   end
 
   it 'should fail on 302 without trailing slash' do
-    stub_redirect(302, '/redirected')
-    expect { expect(DOMAIN + '/redirect').to be_temporarily_redirected_with_trailing_slash }
+    stub_redirect('example.com', 302, '/redirected')
+    expect { expect('example.com/redirect').to be_temporarily_redirected_with_trailing_slash }
       .to raise_error(RuntimeError)
   end
 
   it 'should fail on 300 to correct location' do
-    stub_redirect(300)
-    expect { expect(DOMAIN + '/redirect').to be_temporarily_redirected_with_trailing_slash }
+    stub_redirect('example.com', 300)
+    expect { expect('example.com/redirect').to be_temporarily_redirected_with_trailing_slash }
       .to raise_error(RuntimeError)
   end
 
   it 'should fail on 300 to wrong location' do
-    stub_redirect(300)
-    expect { expect(DOMAIN + '/redirect').to be_temporarily_redirected_with_trailing_slash }
+    stub_redirect('example.com', 300)
+    expect { expect('example.com/redirect').to be_temporarily_redirected_with_trailing_slash }
       .to raise_error(RuntimeError)
   end
 
   it 'should fail on 200' do
-    stub_request(:any, DOMAIN + '/redirect').to_return(body: 'abc')
-    expect { expect(DOMAIN + '/redirect').to be_temporarily_redirected_with_trailing_slash }
+    stub_request(:any, 'example.com/redirect').to_return(body: 'abc')
+    expect { expect('example.com/redirect').to be_temporarily_redirected_with_trailing_slash }
       .to raise_error(RuntimeError)
   end
 end
