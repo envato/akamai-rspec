@@ -55,7 +55,6 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
-  byebug
   json
   pry
   pry-byebug
