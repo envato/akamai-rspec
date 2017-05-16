@@ -5,78 +5,81 @@ module AkamaiRSpec
   class Request
     extend Forwardable
 
-    @@akamai_stg_domain = nil
-    @@akamai_prod_domain = nil
+    class << self
+      attr_accessor :stg_domain, :prod_domain, :network
+    end
+    self.network = 'prod'
 
-    def self.stg_domain=(domain)
-      @@akamai_stg_domain = domain
+    def self.get(url, headers={})
+      new.get(url, headers.merge(debug_headers))
     end
 
-    def self.prod_domain=(domain)
-      @@akamai_prod_domain = domain
-    end
-
-    def self.network=(env)
-      @@env = env
-    end
-
-    def self.get(url)
-      new.get(url)
-    end
-
-    def self.get_with_debug_headers(url)
-      new.get(url, AkamaiHeaders.akamai_debug_headers)
+    def self.get_without_debug_headers(url, headers={})
+      new.get(url, headers)
     end
 
     def self.get_cache_miss(url)
       url += url.include?('?') ? '&' : '?'
       url += SecureRandom.hex
-      new.get(url, AkamaiHeaders.akamai_debug_headers)
+      get(url)
     end
 
     def self.get_decode(url)
-      response = new.get(url, AkamaiHeaders.akamai_debug_headers)
+      response = new.get(url, debug_headers.merge({'Accept-Encoding' => 'gzip'}))
       RestClient::Request.decode(response.headers[:content_encoding], response.body)
       response
     end
 
+    def self.debug_headers
+      {
+        pragma: [
+          'akamai-x-cache-on',
+          'akamai-x-cache-remote-on',
+          'akamai-x-check-cacheable',
+          'akamai-x-get-cache-key',
+          'akamai-x-get-extracted-values',
+          'akamai-x-get-nonces',
+          'akamai-x-get-ssl-client-session-id',
+          'akamai-x-get-true-cache-key',
+          'akamai-x-serial-no'
+        ].join(", ")
+      }
+    end
+
     def initialize
-      @@env ||= 'prod'
+      @domain = case self.class.network.downcase
+      when 'staging'
+        self.class.stg_domain or raise ArgumentError.new(
+          "You must set the staging domain: AkamaiRSpec::Request.stg_domain = 'www.example.com.edgesuite.net'"
+        )
+      else
+        self.class.prod_domain or raise ArgumentError.new(
+          "You must set the prod domain: AkamaiRSpec::Request.prod_domain = 'www.example.com.edgesuite.net'"
+        )
+      end
 
-      @domain = case @@env.downcase
-                when 'staging'
-                  if @@akamai_stg_domain.nil?
-                    raise ArgumentError.new(
-                      "You must set the prod domain: AkamaiRSpec::Request.stg_domain = 'www.example.com.edgesuite.net'"
-                    )
-                  end
-
-                  @@akamai_stg_domain
-                else
-                  if @@akamai_prod_domain.nil?
-                    raise ArgumentError.new(
-                      "You must set the prod domain: AkamaiRSpec::Request.prod_domain = 'www.example.com.edgesuite.net'"
-                    )
-                  end
-
-                  @@akamai_prod_domain
-                end
-
-      @rest_client = RestClient::Request.new(method: :get,
-                                              url: 'fakeurl.com',
-                                              verify_ssl: false)
+      @rest_client = RestClient::Request.new(
+        method: :get,
+        url: 'fakeurl.com',
+        verify_ssl: false
+      )
     end
 
     delegate [:parse_url_with_auth, :stringify_headers] => :@rest_client
 
     def get(url, headers = {})
-      if url.is_a? RestClient::Response
-        warn 'This functionality is deprecated and will be removed in the next release'
+      # DO NOT USE url.is_a? here - some versions of
+      # the JSON gem monkey patch String which causes it to match.
+
+      if url.class.ancestors.include? RestClient::Response
         return AkamaiRSpec::Response.new(url)
       end
 
-      uri = parse_url_with_auth(url)
+      if url.class.ancestors.include? AkamaiRSpec::Response
+        return url
+      end
 
+      uri = parse_url_with_auth(url)
       req = build_request(uri, stringify_headers(headers))
 
       req['Host'] = uri.hostname
@@ -94,8 +97,7 @@ module AkamaiRSpec
 
     def build_request(uri, headers)
       req = Net::HTTP::Get.new(uri)
-      headers.each { |key, value| req.send(:[]=, key, value) }
-
+      headers.each { |key, value| req[key] = value }
       req
     end
   end
