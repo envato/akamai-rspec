@@ -66,9 +66,9 @@ RSpec::Matchers.define :have_cookie do |cookie|
   end
 end
 
-RSpec::Matchers.define :be_forbidden do
+RSpec::Matchers.define :be_forbidden do |headers={}|
   match do |url|
-    response = AkamaiRSpec::Request.get url
+    response = AkamaiRSpec::Request.get url, headers
     fail('Response was not forbidden') unless response.code == 403
     true
   end
