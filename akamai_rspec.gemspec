@@ -11,6 +11,8 @@ Gem::Specification.new do |s|
   s.add_runtime_dependency('rest-client', '~> 1.8')
   s.add_runtime_dependency('json', '~> 1.8')
   s.add_runtime_dependency('rspec', '~> 3.2')
+  s.add_runtime_dependency('webmock', '~> 1.21')
+  s.add_runtime_dependency('rake', '~> 10.4')
   s.files = `git ls-files lib`.split($RS)
   s.require_paths = ['lib']
   s.licenses = 'MIT'
