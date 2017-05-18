@@ -14,7 +14,12 @@ module AkamaiRSpec
 
     def cp_code(headers)
       return nil unless headers.has_key?(:x_cache_key)
-      headers[:x_cache_key].match(X_CACHE_KEY_PATTERN)['cpcode']&.to_i
+
+      matchdata = headers[:x_cache_key].match(X_CACHE_KEY_PATTERN)
+      return nil unless matchdata&.names and matchdata&.captures
+
+      matches = Hash[matchdata.names&.zip(matchdata.captures)]
+      matches&.dig('cpcode')&.to_i
     end
   end
 end
