@@ -17,6 +17,7 @@ module AkamaiRSpec
     end
 
     def self.network=(env)
+      STDERR.puts "AkamaiRSpec.Request: setting network to #{env}"
       @@env = env
     end
 
