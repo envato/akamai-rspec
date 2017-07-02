@@ -5,6 +5,8 @@ require_relative 'caching'
 require_relative 'non_akamai'
 require_relative 'honour_origin_headers'
 require_relative 'x_cache_headers'
+require_relative 'netstorage'
+
 include AkamaiHeaders
 
 RSpec::Matchers.define :be_forwarded_to_index do |channel|

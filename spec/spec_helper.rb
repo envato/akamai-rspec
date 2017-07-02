@@ -5,6 +5,9 @@ require 'akamai_rspec'
 DOMAIN = 'www.example.com.edgesuite.net'
 AkamaiRSpec::Request.prod_domain = DOMAIN
 
+NETSTORAGE_DOMAIN = 'example.download.akamai.com'
+AkamaiRSpec::Request.netstorage_domain = NETSTORAGE_DOMAIN
+
 def stub_headers(url, headers, body = 'abc')
   stub_request(:any, DOMAIN + url).to_return(
     body: body, headers: headers)
