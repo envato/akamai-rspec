@@ -7,6 +7,7 @@ module AkamaiRSpec
 
     @@akamai_stg_domain = nil
     @@akamai_prod_domain = nil
+    @@akamai_netstorage_domain = nil
 
     def self.stg_domain=(domain)
       @@akamai_stg_domain = domain
@@ -19,6 +20,10 @@ module AkamaiRSpec
     def self.network=(env)
       STDERR.puts "AkamaiRSpec.Request: setting network to #{env}"
       @@env = env
+    end
+
+    def self.netstorage_domain=(domain)
+      @@akamai_netstorage_domain = domain
     end
 
     def self.get(url, headers={})
