@@ -3,14 +3,14 @@ require 'set'
 require 'time'
 require 'uri'
 
-RSpec::Matchers.define :honour_origin_cache_headers do |origin, headers|
+RSpec::Matchers.define :honour_origin_cache_headers do |origin, headers, origin_headers={}|
   header_options = [:cache_control, :expires, :both]
   headers ||= :both
   fail("Headers must be one of: #{header_options}") unless header_options.include? headers
 
   match do |url|
     akamai_response = AkamaiRSpec::Request.get url
-    origin_response = origin_response(origin)
+    origin_response = origin_response(origin, origin_headers)
     check_cache_control(origin_response, akamai_response, headers)
     check_expires(origin_response, akamai_response, headers)
     true
@@ -22,8 +22,8 @@ def fix_date_header(origin_response)
   origin_response
 end
 
-def origin_response(origin)
-  fix_date_header(RestClient::Request.execute(method: :get, url: origin, verify_ssl: false))
+def origin_response(origin, origin_headers)
+  fix_date_header(RestClient::Request.execute(method: :get, url: origin, verify_ssl: false, headers: origin_headers))
 end
 
 def clean_cc_directives(origin_response, akamai_response)
