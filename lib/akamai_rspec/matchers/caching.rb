@@ -66,6 +66,10 @@ RSpec::Matchers.define :be_tier_distributed do
   failure_message do
     'No X-Cache-Remote header in response'
   end
+
+  failure_message_when_negated do
+    'X-Cache-Remote header in response'
+  end
 end
 
 def x_check_cacheable(response, should_be_cacheable)
