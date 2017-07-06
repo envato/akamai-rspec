@@ -11,7 +11,7 @@ describe 'be_cacheable' do
   end
 
   it 'should fail when not cacheable' do
-    expect { expect(DOMAIN + '/not_cacheable').to be_cacheable }.to raise_error(RuntimeError)
+    expect(DOMAIN + '/not_cacheable').not_to be_cacheable
   end
 end
 
@@ -26,8 +26,34 @@ describe 'have_no_cache_set' do
   end
 
   it 'should fail when cacheable' do
-    expect { expect(DOMAIN + '/cacheable').to have_no_cache_set }.to raise_error(RuntimeError)
+    expect(DOMAIN + '/cacheable').not_to have_no_cache_set
   end
+end
+
+describe 'be_cached' do
+  before(:each) do
+    stub_headers('/cacheable_but_miss', 'X-Check-Cacheable' => 'YES', 'X-Cache' => 'TCP_MISS')
+    stub_headers('/not_cacheable', 'X-Check-Cacheable' => 'NO', 'X-Cache' => 'TCP_MISS')
+    stub_headers('/cacheable_and_cached', 'X-Check-Cacheable' => 'YES', 'X-Cache' => 'TCP_HIT')
+    stub_headers('/not_cacheable_but_cached', 'X-Check-Cacheable' => 'NO', 'X-Cache' => 'TCP_HIT')
+  end
+
+  it 'should succeed when cacheable and cached' do
+    expect(DOMAIN + '/cacheable_and_cached').to be_cached
+  end
+
+  it 'should fail when not cacheable' do
+    expect(DOMAIN + '/not_cacheable').not_to be_cached
+  end
+
+  it 'should fail when cacheable but missed' do
+    expect(DOMAIN + '/cacheable_but_miss').not_to be_cached
+  end
+
+  it 'should fail when supposedly not cacheable but cached anyway' do
+    expect(DOMAIN + '/not_cacheable_but_cached').not_to be_cached
+  end
+
 end
 
 describe 'not_be_cached' do
@@ -43,17 +69,15 @@ describe 'not_be_cached' do
   end
 
   it 'should fail when cacheable but missed' do
-    expect { expect(DOMAIN + '/cacheable_but_miss').to not_be_cached }.to raise_error(RuntimeError)
+    expect(DOMAIN + '/cacheable_but_miss').not_to not_be_cached
   end
 
   it 'should fail when supposedly not cacheable but cached anyway' do
-    expect { expect(DOMAIN + '/not_cacheable_but_cached').to not_be_cached }
-      .to raise_error(RuntimeError)
+    expect(DOMAIN + '/not_cacheable_but_cached').not_to not_be_cached
   end
 
   it 'should fail when cacheable and cached' do
-    expect { expect(DOMAIN + '/cacheable_and_cached').to not_be_cached }
-      .to raise_error(RuntimeError)
+    expect(DOMAIN + '/cacheable_and_cached').not_to not_be_cached
   end
 end
 
@@ -72,6 +96,6 @@ describe 'be_tier_distributed' do
   end
 
   it 'should fail when not remotely cached' do
-    expect { expect(DOMAIN + '/not_cacheable').to be_tier_distributed }.to raise_error(RuntimeError)
+    expect(DOMAIN + '/not_cacheable').not_to be_tier_distributed
   end
 end
