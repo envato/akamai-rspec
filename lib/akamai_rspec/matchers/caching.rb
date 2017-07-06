@@ -25,11 +25,33 @@ RSpec::Matchers.define :have_no_cache_set do
   end
 
   failure_message do
-    "Cache-Control has been set to '#{response.headers[:cache_control]}' expected 'no-cache'"
+    "Cache-Control has been set to '#{response.headers[:cache_control]}' but expected 'no-cache'"
   end
 
   failure_message_when_negated do
     "Cache-Control has been set to 'no-cache'"
+  end
+end
+
+RSpec::Matchers.define :be_cached do
+  match do |url|
+    @error = ""
+    response = AkamaiRSpec::Request.get_with_debug_headers url
+    cacheable = x_check_cacheable(response, 'YES')
+    response = AkamaiRSpec::Request.get_with_debug_headers url  # again to prevent spurious cache miss
+
+    cached = response.headers[:x_cache] =~ /TCP(\w+)?_HIT/
+    if cached && cacheable
+      true
+    else
+      msg = "x_cache header does not indicate a cache hit: '#{response.headers[:x_cache]}'"
+      @error.length > 0 ? @error += "\n#{msg}" : @error = msg
+      false
+    end
+  end
+
+  failure_message do
+    @error
   end
 end
 

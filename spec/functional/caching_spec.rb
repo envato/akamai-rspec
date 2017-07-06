@@ -30,6 +30,32 @@ describe 'have_no_cache_set' do
   end
 end
 
+describe 'be_cached' do
+  before(:each) do
+    stub_headers('/cacheable_but_miss', 'X-Check-Cacheable' => 'YES', 'X-Cache' => 'TCP_MISS')
+    stub_headers('/not_cacheable', 'X-Check-Cacheable' => 'NO', 'X-Cache' => 'TCP_MISS')
+    stub_headers('/cacheable_and_cached', 'X-Check-Cacheable' => 'YES', 'X-Cache' => 'TCP_HIT')
+    stub_headers('/not_cacheable_but_cached', 'X-Check-Cacheable' => 'NO', 'X-Cache' => 'TCP_HIT')
+  end
+
+  it 'should succeed when cacheable and cached' do
+    expect(DOMAIN + '/cacheable_and_cached').to be_cached
+  end
+
+  it 'should fail when not cacheable' do
+    expect(DOMAIN + '/not_cacheable').not_to be_cached
+  end
+
+  it 'should fail when cacheable but missed' do
+    expect(DOMAIN + '/cacheable_but_miss').not_to be_cached
+  end
+
+  it 'should fail when supposedly not cacheable but cached anyway' do
+    expect(DOMAIN + '/not_cacheable_but_cached').not_to be_cached
+  end
+
+end
+
 describe 'not_be_cached' do
   before(:each) do
     stub_headers('/cacheable_but_miss', 'X-Check-Cacheable' => 'YES', 'X-Cache' => 'TCP_MISS')
