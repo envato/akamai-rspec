@@ -18,6 +18,5 @@ describe 'honour_origin_cache_headers' do
       allow(origin_response).to receive(:headers).and_return(headers)
       expect(fix_date_header(origin_response).headers[:date]).to eq(date.httpdate)
     end
-
   end
 end

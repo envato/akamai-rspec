@@ -1,3 +1,5 @@
+require 'spec_helper'
+
 describe 'honour_origin_cache_headers' do
 
   let(:a_date_in_the_future) { 'Thu, 01 Dec 2015 07:00:00 GMT' }
@@ -62,5 +64,14 @@ describe 'honour_origin_cache_headers' do
     expect {
       expect(DOMAIN + '/stuff').to honour_origin_cache_headers(origin)
     }.to raise_error(/Origin sent .* but Akamai sent/)
+  end
+
+  it 'ignores unwanted headers' do
+    origin = 'http://www.example.com/stuff'
+    headers1 = { 'cache-control' => 'public, max-age=10','expires' => a_date_in_the_future }
+    headers2 = { 'cache-control' => 'public, max-age=10, stale-while-revalidate=10, stale-if-error=10, must-revalidate','expires' => a_date_in_the_future }
+    stub_request(:any, DOMAIN + '/stuff').to_return(body: 'body', headers: headers1)
+    stub_request(:any, origin).to_return(body: 'body', headers: headers2)
+    expect(DOMAIN + '/stuff').to honour_origin_cache_headers(origin)
   end
 end
