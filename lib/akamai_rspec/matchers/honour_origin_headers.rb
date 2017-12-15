@@ -30,7 +30,16 @@ def clean_cc_directives(origin_response, akamai_response)
   origin_cc_directives = origin_response.headers[:cache_control].split(/[, ]+/).to_set
   akamai_cc_directives = akamai_response.headers[:cache_control].split(/[, ]+/).to_set
 
-  origin_cc_directives.delete 'must-revalidate' # as Akamai does no pass it on
+  unwanted_values = %w(
+    must-revalidate
+    stale-if-error
+    stale-while-revalidate
+  )
+
+  unwanted_values.each do |unwanted_value|
+    origin_cc_directives.delete_if { |key, _| key.include?(unwanted_value) }
+  end
+
   return origin_cc_directives, akamai_cc_directives
 end
 
